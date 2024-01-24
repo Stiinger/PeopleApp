@@ -1,0 +1,96 @@
+﻿@page "/personas"
+@inject PersonaService personaService;
+@rendermode InteractiveServer
+
+<PageTitle>Registro Personas</PageTitle>
+
+<div class="card shadow-lg mb-3">
+	<EditForm Model="persona" OnValidSubmit="Crear" FormName="FormularioPersonas">
+		<DataAnnotationsValidator />
+		<div class="container">
+			<div class="card-shadow lg">
+				@*Header*@
+				<div class="card-header">
+					<h3><strong>REGISTRO PERSONAS</strong></h3>
+				</div>
+				@*Body*@
+				<div class="card-body">
+					<div class="col-xs-12 col-sm-12 col-md-8 col-lg-6 col-xl-4"></div>
+					@*Id*@
+					<div class="row mb-3">
+						<div class="col-4">
+							<label for="idpersona" class="form-label"><strong>Id:</strong></label>
+							<InputNumber id="idpersona" class="form-control form-control-sm" @bind-Value="persona.PersonaId"></InputNumber>
+						</div>
+					</div>
+					@*Nombre*@
+					<div class="row mb-3">
+						<label for="nombre" class="form-label"><strong>Nombre:</strong></label>
+						<div class="col-4">
+							<InputText id="nombre" class="form-control form-control-sm" placeholder="Escriba su nombre" @bind-Value="persona.Nombre" />
+							<ValidationMessage For="@(() => persona.Nombre)" />
+						</div>
+					</div>
+					@*Teléfono*@
+					<div class="row mb-3">
+						<div class="col-4">
+							<label for="telefono" class="form-label"><strong>Tel&eacute;fono:</strong></label>
+							<InputText id="telefono" class="form-control form-control-sm" placeholder="Escriba su numero de teléfono" @bind-Value="persona.Telefono"></InputText>
+							<ValidationMessage For="@(() => persona.Telefono)"></ValidationMessage>
+						</div>
+					</div>
+					@*Select*@
+					<div class="mb-3 col-4">
+						<label for="personaselect" class="form-label">PersonaId:</label>
+						<InputSelect @bind-Value="persona.PersonaId" class="form-select form-select-sm">
+							@foreach (var persona in personas)
+							{
+								<option value="@persona.PersonaId">@persona.Nombre</option>
+							}
+						</InputSelect>
+					</div>
+				</div>
+				@*Footer*@
+				<div class="card-footer d-flex justify-content-center">
+					<button type="submit" class="btn btn-outline-primary">
+						Crear
+					</button>
+				</div>
+			</div>
+		</div>
+		@Mensaje
+	</EditForm>
+</div>
+
+@code {
+
+	public Persona persona { get; set; } = new Persona();
+	public string Mensaje { get; set; } = string.Empty;
+	List<Persona> personas = new List<Persona>()
+	{
+			new Persona() {PersonaId = 1, Nombre = "Alta"},
+			new Persona() {PersonaId = 2, Nombre = "Media"},
+			new Persona() {PersonaId = 3, Nombre = "Baja"}
+	};
+
+	public async Task Crear()
+	{
+		if (Validar())
+			Mensaje = "Error. Ya existe una persona con este nombre.";
+		else
+		{
+			var crear = await personaService.Guardar(persona);
+			if (crear)
+				Mensaje = "Se guardó correctamente la persona.";
+			else
+				Mensaje = "Error. No se pudo guardar la persona.";
+		}
+	}
+
+	public bool Validar()
+	{
+		var personaExiste = (personaService.Listar(c =>
+			c.Nombre!.ToLower() == persona.Nombre!.ToLower()));
+		return personaExiste == null;
+	}
+}
